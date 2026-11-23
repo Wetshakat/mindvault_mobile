@@ -34,7 +34,7 @@ function createStyles(colors: ThemeColors) {
       alignItems: "center",
     },
     retryText: {
-      color: "#ffffff",
+      color: colors.background,
       fontWeight: "600",
       fontSize: 13,
     },

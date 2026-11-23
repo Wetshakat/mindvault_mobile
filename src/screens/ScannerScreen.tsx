@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import type { RootStackParamList } from "../navigation";
 import { spacing } from "../theme";
-import type { ThemeColors } from "../theme";
+import type { ThemeColors, ColorScheme } from "../theme";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { parseResourceId } from "../utils/resourceLinks";
 import { hapticImpact } from "../utils/haptics";
@@ -28,11 +28,24 @@ interface ScannerScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList, "Scanner">;
 }
 
-function createStyles(colors: ThemeColors) {
+function withOpacity(color: string, opacity: number): string {
+  const hex = color.replace("#", "");
+  const normalized = hex.length === 3
+    ? hex.split("").map((value) => value + value).join("")
+    : hex;
+  const value = Number.parseInt(normalized, 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+
+  return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+}
+
+function createStyles(colors: ThemeColors, colorScheme: ColorScheme) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#000",
+      backgroundColor: colors.background,
     },
     centered: {
       flex: 1,
@@ -63,7 +76,7 @@ function createStyles(colors: ThemeColors) {
       position: "absolute",
       width: 30,
       height: 30,
-      borderColor: "#ffffff",
+      borderColor: colors.onPrimary,
     },
     cornerTopLeft: {
       top: 0,
@@ -94,7 +107,7 @@ function createStyles(colors: ThemeColors) {
       borderBottomRightRadius: 4,
     },
     hint: {
-      color: "#ffffff",
+      color: colors.onPrimary,
       fontSize: 15,
       fontWeight: "500",
       marginTop: spacing.xl,
@@ -103,12 +116,12 @@ function createStyles(colors: ThemeColors) {
       marginTop: spacing.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      backgroundColor: "rgba(200, 30, 30, 0.85)",
+      backgroundColor: colors.dangerBg,
       borderRadius: 8,
       maxWidth: 280,
     },
     errorText: {
-      color: "#ffffff",
+      color: colors.text,
       fontSize: 13,
       fontWeight: "600",
       textAlign: "center",
@@ -119,16 +132,19 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: spacing.sm,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: "#ffffff",
+      borderColor: colors.onPrimary,
     },
     pasteButtonText: {
-      color: "#ffffff",
+      color: colors.onPrimary,
       fontSize: 14,
       fontWeight: "600",
     },
     modalOverlay: {
       flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
+      backgroundColor: withOpacity(
+        colorScheme === "dark" ? colors.background : colors.text,
+        0.5
+      ),
       justifyContent: "flex-end",
     },
     modalSheet: {
@@ -200,8 +216,8 @@ function createStyles(colors: ThemeColors) {
 }
 
 export function ScannerScreen({ navigation }: ScannerScreenProps) {
-  const { colors, shared, typography } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { colors, colorScheme, shared, typography } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, colorScheme), [colors, colorScheme]);
 
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
